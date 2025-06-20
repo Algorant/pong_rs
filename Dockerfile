@@ -1,15 +1,37 @@
-# Use a lightweight nginx image to serve static files
+# Use nginx alpine image
 FROM nginx:alpine
 
-# Copy the web files to nginx's default serving directory
+# Copy web files
 COPY web/ /usr/share/nginx/html/
 
-# Copy custom nginx configuration and MIME types
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY mime.types /etc/nginx/mime.types
+# Create a simple nginx config with WASM support
+RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+server {
+    listen 8080;
+    root /usr/share/nginx/html;
+    index index.html;
 
-# Expose port 8080 (Fly.io default)
+    # Add WASM MIME type
+    location ~ \.wasm$ {
+        add_header Content-Type application/wasm;
+        add_header Cross-Origin-Embedder-Policy require-corp;
+        add_header Cross-Origin-Opener-Policy same-origin;
+    }
+
+    # JavaScript files
+    location ~ \.js$ {
+        add_header Cross-Origin-Embedder-Policy require-corp;
+        add_header Cross-Origin-Opener-Policy same-origin;
+    }
+
+    # Default handler
+    location / {
+        add_header Cross-Origin-Embedder-Policy require-corp;
+        add_header Cross-Origin-Opener-Policy same-origin;
+        try_files $uri $uri/ /index.html;
+    }
+}
+EOF
+
 EXPOSE 8080
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
