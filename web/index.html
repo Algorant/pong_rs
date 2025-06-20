@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Pong - Rust Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        
+        canvas {
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            margin: 20px 0;
+        }
+        
+        .controls {
+            max-width: 600px;
+            text-align: center;
+            line-height: 1.6;
+            color: #ccc;
+        }
+        
+        .controls h3 {
+            color: #00ff00;
+            margin-top: 20px;
+        }
+        
+        .key {
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: inherit;
+            color: #00ff00;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #00ff00;
+            font-size: 1.5em;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .subtitle { font-size: 1em; }
+            canvas { 
+                max-width: 90vw;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🏓 PONG</h1>
+    <p class="subtitle">Built with Rust + Macroquad + WebAssembly</p>
+    
+    <div id="loading" class="loading">
+        Loading game...
+    </div>
+    
+    <canvas id="glcanvas" tabindex='1' style="display: none;"></canvas>
+    
+    <div class="controls">
+        <h3>🎮 Game Controls</h3>
+        <p><strong>Menu Navigation:</strong> <span class="key">SPACE</span> to start, <span class="key">1</span>/<span class="key">2</span> to select mode</p>
+        <p><strong>Two Player:</strong> Left paddle <span class="key">W</span>/<span class="key">S</span>, Right paddle <span class="key">↑</span>/<span class="key">↓</span></p>
+        <p><strong>vs AI:</strong> Player <span class="key">W</span>/<span class="key">S</span></p>
+        <p><strong>Game:</strong> <span class="key">P</span> to pause, <span class="key">R</span> to restart, <span class="key">M</span> to change mode</p>
+        <p><strong>Exit:</strong> <span class="key">ESC</span> at any time</p>
+        
+        <h3>🎯 Game Features</h3>
+        <p>• Enhanced physics with ball acceleration and paddle momentum<br>
+        • Particle effects and screen shake for satisfying feedback<br>
+        • Smart AI opponent with adjustable difficulty<br>
+        • Complete state management and smooth transitions<br>
+        • Built from scratch in 10 iterative development phases</p>
+    </div>
+
+    <!-- Macroquad WASM loader -->
+    <script>
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        const canvas = document.getElementById("glcanvas");
+        const loading = document.getElementById("loading");
+        
+        // Set canvas size
+        if (isMobile()) {
+            canvas.width = Math.min(window.innerWidth - 40, 600);
+            canvas.height = Math.min(window.innerHeight * 0.6, 450);
+        } else {
+            canvas.width = 800;
+            canvas.height = 600;
+        }
+
+        // Load and initialize the WASM module
+        import("./mq_js_bundle.js").then(async (loader) => {
+            await loader.default("./pong_rs.wasm");
+            loading.style.display = "none";
+            canvas.style.display = "block";
+            canvas.focus();
+        }).catch((error) => {
+            loading.innerHTML = "Failed to load game: " + error;
+            console.error("Failed to load WASM:", error);
+        });
+
+        // Prevent context menu on right click for better game experience
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        // Auto-focus canvas when clicked
+        canvas.addEventListener('click', () => canvas.focus());
+    </script>
+</body>
+</html>
